@@ -1,19 +1,21 @@
-from urllib.parse import urljoin, urlparse
+from http import HTTPStatus
+from urllib.parse import urljoin
+
 import requests
 
 
 class RobotsTxtParser:
-    def __init__(self, base_url):
+    def __init__(self, base_url: str):
         self.base_url = base_url
-        self.disallowed_paths = set()
+        self._disallowed_paths = set()
 
-    def get_robots_txt(self):
+    def get_robots_txt(self) -> None:
         robots_url = urljoin(self.base_url, 'robots.txt')
         response = requests.get(robots_url)
-        if response.status_code == 200:
-            self.parse_robots_txt(response.text)
+        if response.status_code == HTTPStatus.OK:
+            self.__parse_robots_txt(response.text)
 
-    def parse_robots_txt(self, content):
+    def __parse_robots_txt(self, content: str) -> None:
         for_all_user_agents = False
         lines = content.splitlines()
         for line in lines:
@@ -23,6 +25,13 @@ class RobotsTxtParser:
                 disallow_path = line.split(': ')[1]
                 self.disallowed_paths.add(disallow_path)
 
-    def is_path_allowed(self, path):
+    def is_path_allowed(self, path: str) -> bool:
         return path not in self.disallowed_paths
 
+    @property
+    def disallowed_paths(self):
+        return self._disallowed_paths
+
+    @disallowed_paths.setter
+    def disallowed_paths(self, value):
+        self._disallowed_paths = value

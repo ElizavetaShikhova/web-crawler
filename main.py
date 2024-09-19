@@ -1,4 +1,4 @@
-import ConsoleParser
+import consoleParser
 
 if __name__ == '__main__':
-    ConsoleParser.cli()
+    consoleParser.cli()

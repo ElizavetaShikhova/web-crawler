@@ -1,17 +1,15 @@
+from http import HTTPStatus
+from typing import Optional
+
 import requests
+
 
 class HTMLGetter:
     def __init__(self):
         self.html_code = None
 
-    def get(self, url):
+    def get(self, url: str) -> Optional[str]:
         response = requests.get(url)
-        if response.status_code == 200:
+        if response.status_code == HTTPStatus.OK:
             self.html_code = response.text
-
-    def is_page_found(self):
-        return self.html_code != None
-
-
-
-
+        return self.html_code
