@@ -15,6 +15,9 @@ class RobotsTxtParser:
         if response.status_code == HTTPStatus.OK:
             self.__parse_robots_txt(response.text)
 
+    def is_path_allowed(self, path: str) -> bool:
+        return path not in self.disallowed_paths
+
     def __parse_robots_txt(self, content: str) -> None:
         for_all_user_agents = False
         lines = content.splitlines()
@@ -24,9 +27,6 @@ class RobotsTxtParser:
             if line.startswith('Disallow:') and for_all_user_agents:
                 disallow_path = line.split(': ')[1]
                 self.disallowed_paths.add(disallow_path)
-
-    def is_path_allowed(self, path: str) -> bool:
-        return path not in self.disallowed_paths
 
     @property
     def disallowed_paths(self):

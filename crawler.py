@@ -1,5 +1,8 @@
 import hashlib
+import pickle
+from collections import deque
 from pathlib import Path
+from typing import Optional, Deque
 from urllib.parse import urlparse
 
 from HTMLGetter import HTMLGetter
@@ -8,6 +11,7 @@ from URLPatterns import URLPatterns
 from robotsTxtParser import RobotsTxtParser
 
 DIRECTORY_TO_DOWNLOAD_HTML = './htmlPages'
+STATE_FILE = 'crawler_state.pkl'
 
 
 class Crawler:
@@ -18,23 +22,30 @@ class Crawler:
         self._patterns = URLPatterns()
         self.allowed_domain = None
         self.start_url = None
+        self._queue: Deque[str] = deque()
         self.__initialize_directories(DIRECTORY_TO_DOWNLOAD_HTML)
 
     def crawl(self, start_url: str = None) -> None:
         start_url = self.__initialize_and_validate_url(start_url)
-        self.visited_links.add(start_url)
-        self.__download(start_url)
-        print(start_url)
+        self.queue.append(start_url)
+        while self.queue:
+            current_url = self.queue.popleft()
+            if current_url in self.visited_links:
+                continue
+            self.visited_links.add(current_url)
+            self.__download(current_url)
+            print(current_url)
 
-        base_url = urlparse(start_url).scheme + '://' + urlparse(start_url).netloc
-        robots_parser = self.__load_robots_txt(base_url)
-
-        html_code = self.html_getter.get(start_url)
-        if html_code:
+            base_url = urlparse(current_url).scheme + '://' + urlparse(current_url).netloc
+            robots_parser = self.__load_robots_txt(base_url)
+            html_code = self.html_getter.get(current_url)
+            if not html_code:
+                continue
             links = self.__parse_html(base_url, robots_parser, html_code)
             for link in links:
                 if self.__check_is_allowed_link(link):
-                    self.crawl(link)
+                    self.queue.append(link)
+                    save_state(self)
 
     def set_start_url(self, url: str) -> None:
         if not self.patterns.URL_PATTERN.match(url):
@@ -110,3 +121,22 @@ class Crawler:
     @property
     def patterns(self):
         return self._patterns
+
+    @property
+    def queue(self):
+        return self._queue
+
+    @queue.setter
+    def queue(self, value):
+        self._queue = value
+
+
+def save_state(crawler: Crawler) -> None:
+    with open(STATE_FILE, 'wb') as f:
+        pickle.dump(crawler, f)
+
+
+def load_state() -> Optional[Crawler]:
+    if Path(STATE_FILE).exists():
+        with open(STATE_FILE, 'rb') as f:
+            return pickle.load(f)

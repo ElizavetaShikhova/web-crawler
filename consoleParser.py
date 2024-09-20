@@ -1,23 +1,8 @@
 import os
-import pickle
 from pathlib import Path
-from typing import Optional
-
 import click
 
-from crawler import Crawler
-
-STATE_FILE = 'crawler_state.pkl'
-
-def save_state(crawler: Crawler) -> None:
-    with open(STATE_FILE, 'wb') as f:
-        pickle.dump(crawler, f)
-
-
-def load_state() -> Optional[Crawler]:
-    if Path(STATE_FILE).exists():
-        with open(STATE_FILE, 'rb') as f:
-            return pickle.load(f)
+from crawler import Crawler, load_state, save_state, STATE_FILE
 
 
 @click.group()
@@ -32,11 +17,14 @@ def cli(ctx) -> None:
 @cli.command()
 @click.pass_context
 def crawler_start(ctx: click.Context) -> None:
-    crawler = ctx.obj
+    '''crawler = ctx.obj
     try:
-        crawler.crawl()
+        crawler.crawl(crawler.current_url)
     except Exception as exc:
         click.echo(exc)
+    save_state(crawler)'''
+    crawler = ctx.obj
+    crawler.crawl()
     save_state(crawler)
 
 
