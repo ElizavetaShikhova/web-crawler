@@ -1,8 +1,7 @@
 from html.parser import HTMLParser
-from typing import List, Tuple, Optional
 from urllib.parse import urljoin, urlparse
 
-from robotsTxtParser import RobotsTxtParser
+from robots_txt_parser import RobotsTxtParser
 
 
 class Parser(HTMLParser):
@@ -12,7 +11,7 @@ class Parser(HTMLParser):
         self.robots_parser = robots_parser
         self.links = []
 
-    def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
+    def handle_starttag(self, tag: str, attrs: list[tuple[str | None]]) -> None:
         if tag != 'a':
             return
         for attr in attrs:

@@ -17,16 +17,12 @@ def cli(ctx) -> None:
 @cli.command()
 @click.pass_context
 def crawler_start(ctx: click.Context) -> None:
-    '''crawler = ctx.obj
+    crawler = ctx.obj
     try:
-        crawler.crawl(crawler.current_url)
+        crawler.crawl()
     except Exception as exc:
         click.echo(exc)
-    save_state(crawler)'''
-    crawler = ctx.obj
-    crawler.crawl()
     save_state(crawler)
-
 
 @cli.command()
 @click.argument('start_url')
