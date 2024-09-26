@@ -25,7 +25,8 @@ class Crawler:
 
     def crawl(self, start_url: str = None) -> None:
         start_url = self.__initialize_and_validate_url(start_url)
-        self._queue.append(start_url)
+        if self.__check_is_allowed_link(start_url):
+            self._queue.append(start_url)
         while self._queue:
             current_url = self._queue.popleft()
             if current_url in self._visited_links:

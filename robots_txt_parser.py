@@ -5,9 +5,9 @@ import requests
 
 
 class RobotsTxtParser:
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: str, disallowed_paths: set[str] = None):
         self.base_url = base_url
-        self._disallowed_paths = set()
+        self._disallowed_paths = disallowed_paths if disallowed_paths is not None else set()
 
     def fetch_robots_txt(self) -> None:
         robots_url = urljoin(self.base_url, 'robots.txt')
