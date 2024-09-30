@@ -53,3 +53,25 @@ def crawler_reset() -> None:
     if Path(STATE_FILE).exists():
         os.remove(STATE_FILE)
     click.echo("Crawler state reset.")
+
+@cli.command()
+@click.argument('update', type=click.BOOL)
+@click.pass_context
+def crawler_set_update(ctx: click.Context, update: bool) -> None:
+    try:
+        ctx.obj.set_update(update)
+        click.echo(f"Update existing pages set to: {update}")
+        save_state(ctx.obj)
+    except Exception as exc:
+        click.echo(exc)
+
+@cli.command()
+@click.argument('update_interval', type=click.BOOL)
+@click.pass_context
+def crawler_set_update_interval(ctx: click.Context, update_interaval: int) -> None:
+    try:
+        ctx.obj.set_update_interval(update_interaval)
+        click.echo(f"Update interval set to: {update_interaval}")
+        save_state(ctx.obj)
+    except Exception as exc:
+        click.echo(exc)

@@ -1,7 +1,9 @@
 import hashlib
 import pickle
 from collections import deque
+from os import path
 from pathlib import Path
+from time import time
 from urllib.parse import urlparse
 
 from html_getter import HTMLGetter
@@ -20,6 +22,8 @@ class Crawler:
         self._html_getter = HTMLGetter()
         self.allowed_domain: str | None = None
         self.start_url: str | None = None
+        self.update_flag: bool = False
+        self.update_interval: int = 3600
         self._queue: deque[str] = deque()
         self.__initialize_directories(DIRECTORY_TO_DOWNLOAD_HTML)
 
@@ -33,7 +37,6 @@ class Crawler:
                 continue
             self._visited_links.add(current_url)
             self.__download(current_url)
-            print(current_url)
 
             base_url = urlparse(current_url).scheme + '://' + urlparse(current_url).netloc
             robots_parser = self.__load_robots_txt(base_url)
@@ -45,6 +48,8 @@ class Crawler:
                 if self.__check_is_allowed_link(link):
                     self._queue.append(link)
                     save_state(self)
+        if self.update_flag:
+            self._visited_links = set()
 
     def set_start_url(self, url: str) -> None:
         if not URL_PATTERN.match(url):
@@ -55,6 +60,12 @@ class Crawler:
         if not DOMAIN_PATTERN.match(domain):
             raise ValueError("Error: Invalid domain")
         self.allowed_domain = domain
+
+    def set_update(self, update_flag: bool) -> None:
+        self.update_flag = update_flag
+
+    def set_update_interval(self, interval: int) -> None:
+        self.update_interval = interval
 
     def __initialize_directories(self, directory: Path) -> None:
         if not directory.exists():
@@ -68,10 +79,18 @@ class Crawler:
         folder_name = urlparse(url).netloc
         folder_name = DIRECTORY_TO_DOWNLOAD_HTML / folder_name
         self.__initialize_directories(folder_name)
+        file_name = hashlib.md5(url.encode()).hexdigest() + '.html'
+        file_path = folder_name / file_name
+        if file_path.exists():
+            file_mtime = path.getmtime(file_path)
+            current_time = time()
+            if current_time - file_mtime < self.update_interval:
+                print(f"Skipping {url} as it was recently updated.")
+                return
         html_code = self._html_getter.get(url)
         if html_code:
-            file_name = hashlib.md5(url.encode()).hexdigest() + '.html'
-            (folder_name / file_name).write_text(html_code, encoding='utf-8')
+            file_path.write_text(html_code, encoding='utf-8')
+            print(f"Downloaded {url}")
 
     def __initialize_and_validate_url(self, start_url: str | None) -> str:
         if start_url is None:
