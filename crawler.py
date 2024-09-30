@@ -24,6 +24,7 @@ class Crawler:
         self.start_url: str | None = None
         self.update_flag: bool = False
         self.update_interval: int = 3600
+        self.possible_image_size: int | None = None
         self._queue: deque[str] = deque()
         self.__initialize_directories(DIRECTORY_TO_DOWNLOAD_HTML)
 
@@ -67,6 +68,9 @@ class Crawler:
     def set_update_interval(self, interval: int) -> None:
         self.update_interval = interval
 
+    def set_possible_image_size(self, possible_image_size: int) -> None:
+        self.possible_image_size = possible_image_size
+
     def __initialize_directories(self, directory: Path) -> None:
         if not directory.exists():
             directory.mkdir(parents=True)
@@ -88,9 +92,20 @@ class Crawler:
                 print(f"Skipping {url} as it was recently updated.")
                 return
         html_code = self._html_getter.get(url)
-        if html_code:
-            file_path.write_text(html_code, encoding='utf-8')
-            print(f"Downloaded {url}")
+        if html_code and self.__contains_large_images(html_code):
+            print(f"Skipping {url} as it contains images larger than {self.possible_image_size} bytes")
+            return
+        file_path.write_text(html_code, encoding='utf-8')
+        print(f"Downloaded {url}")
+
+    def __contains_large_images(self, html_code: str) -> bool:
+        if self.possible_image_size is None:
+            return False
+        parser = Parser(self.start_url, self.__load_robots_txt(self.start_url))
+        parser.feed(html_code)
+        if parser.max_image_size_on_page > self.possible_image_size:
+            return True
+        return False
 
     def __initialize_and_validate_url(self, start_url: str | None) -> str:
         if start_url is None:
