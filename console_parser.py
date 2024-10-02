@@ -25,7 +25,7 @@ def crawler_start(ctx: click.Context) -> None:
     save_state(crawler)
 
 @cli.command()
-@click.argument('start_url')
+@click.argument('start_url', type=click.STRING)
 @click.pass_context
 def crawler_set_start_url(ctx: click.Context, start_url: str) -> None:
     try:
@@ -37,7 +37,7 @@ def crawler_set_start_url(ctx: click.Context, start_url: str) -> None:
 
 
 @cli.command()
-@click.argument('domain')
+@click.argument('domain', type=click.STRING)
 @click.pass_context
 def crawler_set_domain(ctx: click.Context, domain: str):
     try:
@@ -53,3 +53,47 @@ def crawler_reset() -> None:
     if Path(STATE_FILE).exists():
         os.remove(STATE_FILE)
     click.echo("Crawler state reset.")
+
+@cli.command()
+@click.argument('update', type=click.BOOL)
+@click.pass_context
+def crawler_set_update(ctx: click.Context, update: bool) -> None:
+    try:
+        ctx.obj.set_update(update)
+        click.echo(f"Update existing pages set to: {update}")
+        save_state(ctx.obj)
+    except Exception as exc:
+        click.echo(exc)
+
+@cli.command()
+@click.argument('update_interval', type=click.INT)
+@click.pass_context
+def crawler_set_update_interval(ctx: click.Context, update_interval: int) -> None:
+    try:
+        ctx.obj.set_update_interval(update_interval)
+        click.echo(f"Update interval set to {update_interval} seconds")
+        save_state(ctx.obj)
+    except Exception as exc:
+        click.echo(exc)
+
+@cli.command()
+@click.argument('possible_image_size', type=click.INT)
+@click.pass_context
+def crawler_set_possible_image_size(ctx: click.Context, possible_image_size: int) -> None:
+    try:
+        ctx.obj.set_possible_image_size(possible_image_size)
+        click.echo(f"Possible image size set to {possible_image_size} bytes")
+        save_state(ctx.obj)
+    except Exception as exc:
+        click.echo(exc)
+
+@cli.command()
+@click.argument('download_only_text', type=click.BOOL)
+@click.pass_context
+def crawler_set_download_only_text(ctx: click.Context, download_only_text: bool) -> None:
+    try:
+        ctx.obj.set_download_only_text(download_only_text)
+        click.echo(f"Download only text from pages set to: {download_only_text}")
+        save_state(ctx.obj)
+    except Exception as exc:
+        click.echo(exc)
