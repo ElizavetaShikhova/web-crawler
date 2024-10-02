@@ -13,8 +13,12 @@ class Parser(HTMLParser):
         self.robots_parser = robots_parser
         self.links = []
         self.max_image_size_on_page: int = 0
+        self.text_content = []
+        self.ignore_text: bool = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str | None]]) -> None:
+        if tag in ('script', 'style'):
+            self.ignore_text = True
         if tag == 'a':
             for attr in attrs:
                 if attr[0] == 'href':
@@ -28,6 +32,17 @@ class Parser(HTMLParser):
                 if attr[0] == 'src':
                     image_url = urljoin(self.base_url, attr[1])
                     self.__count_image_size(image_url)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in ('script', 'style'):
+            self.ignore_text = False
+
+    def handle_data(self, data: str) -> None:
+        if not self.ignore_text:
+            self.text_content.append(data)
+
+    def get_extract_text(self) -> str:
+        return ' '.join(self.text_content).strip()
 
     def __count_image_size(self, image_url: str) -> None:
         try:

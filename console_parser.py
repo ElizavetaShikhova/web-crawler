@@ -86,3 +86,14 @@ def crawler_set_possible_image_size(ctx: click.Context, possible_image_size: int
         save_state(ctx.obj)
     except Exception as exc:
         click.echo(exc)
+
+@cli.command()
+@click.argument('download_only_text', type=click.BOOL)
+@click.pass_context
+def crawler_set_download_only_text(ctx: click.Context, download_only_text: bool) -> None:
+    try:
+        ctx.obj.set_download_only_text(download_only_text)
+        click.echo(f"Download only text from pages set to: {download_only_text}")
+        save_state(ctx.obj)
+    except Exception as exc:
+        click.echo(exc)

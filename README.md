@@ -11,3 +11,4 @@
   <seconds>`
 * Установка лимита на размер изображения (в байтах). Если на страницы изображения большего размера, то страница не 
   будет скачена: `python main.py crawler-set-possible_image_size <size>`
+* Скачивание только текста с страниц html `python main.py crawler-set-download-only-text <bool>`

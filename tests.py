@@ -2,6 +2,7 @@ import unittest
 from http import HTTPStatus
 from unittest.mock import patch, MagicMock, Mock
 import requests
+import time
 
 from crawler import Crawler
 from html_getter import HTMLGetter
@@ -137,6 +138,36 @@ class TestHTMLParser(unittest.TestCase):
         html = '<a href="/page1">Page 1</a><a href="/page3">Page 3</a>'
         self.parser.feed(html)
         self.assertEqual(self.parser.links, ["http://example.com/page1"])
+
+    def test_extract_text_simple(self):
+        html = '<p>Hello, world!</p>'
+        self.parser.feed(html)
+        self.assertEqual(self.parser.get_extract_text(), "Hello, world!")
+
+    def test_extract_text_with_nested_tags(self):
+        html = '<div><h1>Title</h1><p>Paragraph text.</p></div>'
+        self.parser.feed(html)
+        self.assertEqual(self.parser.get_extract_text(), "Title Paragraph text.")
+
+    def test_extract_text_with_script_and_style(self):
+        html = '<style>body { font-size: 12px; }</style><script>alert("Hi!");</script><p>Visible text.</p>'
+        self.parser.feed(html)
+        self.assertEqual(self.parser.get_extract_text(), "Visible text.")
+
+    def test_extract_text_with_multiple_elements(self):
+        html = '<div>First part.</div><p>Second part.</p><span>Third part.</span>'
+        self.parser.feed(html)
+        self.assertEqual(self.parser.get_extract_text(), "First part. Second part. Third part.")
+
+    def test_extract_text_with_empty_tags(self):
+        html = '<div></div><p></p><span></span>'
+        self.parser.feed(html)
+        self.assertEqual(self.parser.get_extract_text(), "")
+
+    def test_extract_text_with_line_breaks(self):
+        html = '<p>Line 1<br>Line 2<br>Line 3</p>'
+        self.parser.feed(html)
+        self.assertEqual(self.parser.get_extract_text(), "Line 1 Line 2 Line 3")
 
     def test_handle_starttag_with_external_links(self):
         html = '<a href="http://external.com/page1">External Page 1</a>'

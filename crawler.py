@@ -25,6 +25,7 @@ class Crawler:
         self.update_flag: bool = False
         self.update_interval: int = 3600
         self.possible_image_size: int | None = None
+        self.download_only_text: bool = False
         self._queue: deque[str] = deque()
         self.__initialize_directories(DIRECTORY_TO_DOWNLOAD_HTML)
 
@@ -71,6 +72,9 @@ class Crawler:
     def set_possible_image_size(self, possible_image_size: int) -> None:
         self.possible_image_size = possible_image_size
 
+    def set_download_only_text(self, download_only_text: bool) -> None:
+        self.download_only_text = download_only_text
+
     def __initialize_directories(self, directory: Path) -> None:
         if not directory.exists():
             directory.mkdir(parents=True)
@@ -91,10 +95,19 @@ class Crawler:
             if current_time - file_mtime < self.update_interval:
                 print(f"Skipping {url} as it was recently updated.")
                 return
+
         html_code = self._html_getter.get(url)
         if html_code and self.__contains_large_images(html_code):
             print(f"Skipping {url} as it contains images larger than {self.possible_image_size} bytes")
             return
+
+        if self.download_only_text:
+            parser = Parser(url, self.__load_robots_txt(url))
+            parser.feed(html_code)
+            file_path.write_text(parser.get_extract_text(), encoding='utf-8')
+            print(f"Only text downloaded from {url}")
+            return
+
         file_path.write_text(html_code, encoding='utf-8')
         print(f"Downloaded {url}")
 
